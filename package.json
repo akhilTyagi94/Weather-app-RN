@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo/vector-icons": "^15.1.1",
     "expo": "~56.0.3",
+    "expo-linear-gradient": "^56.0.4",
+    "expo-location": "^56.0.12",
     "expo-status-bar": "~56.0.4",
     "react": "19.2.3",
-    "react-native": "0.85.3"
+    "react-native": "0.85.3",
+    "react-native-dotenv": "^3.4.11"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
