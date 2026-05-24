@@ -10,12 +10,14 @@ A beautiful, feature-rich weather application built with **React Native** and **
 
 - 🔍 **City Search** — Debounced search with auto-complete suggestions powered by OpenWeatherMap Geocoding API
 - 📍 **Current Location** — One-tap GPS-based weather using device geolocation
+- ⭐ **Favorites** — Save and manage your favorite cities using local storage (AsyncStorage)
+- 🗺️ **Precipitation Radar** — Live rain radar map powered by the RainViewer API
 - 🌡️ **Real-Time Weather** — Temperature, weather condition, icon, date, and location
 - 🕐 **Hourly Forecast** — Horizontally scrollable temperature and wind cards for the next 8 intervals
-- 📅 **5-Day Forecast** — Daily high temperatures with weather icons and day names
+- 📅 **10-Day Style Forecast** — Daily high/low temperatures with crisp vector weather icons
 - 🌬️ **Today's Highlights** — Air Quality Index (PM₂.₅, SO₂, NO₂, O₃), Sunrise & Sunset, Humidity, Pressure, Visibility, and Feels Like
 - 🔄 **Pull-to-Refresh** — Native swipe-down gesture to reload weather data
-- 🎨 **Dark Theme** — Premium dark UI with smooth fade-in animations
+- 🎨 **Apple Weather Style UI** — Premium frosted glassmorphism cards (`expo-blur`) and dynamic gradient backgrounds based on live weather conditions
 
 ---
 
@@ -35,9 +37,12 @@ A beautiful, feature-rich weather application built with **React Native** and **
 | [Expo](https://expo.dev/) | Build toolchain & development platform |
 | [TypeScript](https://www.typescriptlang.org/) | Type-safe JavaScript |
 | [expo-location](https://docs.expo.dev/versions/latest/sdk/location/) | Native GPS & geolocation |
-| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/) | Gradient backgrounds |
-| [@expo/vector-icons](https://docs.expo.dev/guides/icons/) | Material Design icons |
+| [expo-linear-gradient](https://docs.expo.dev/versions/latest/sdk/linear-gradient/) | Dynamic gradient backgrounds |
+| [expo-blur](https://docs.expo.dev/versions/latest/sdk/blur/) | Frosted glassmorphism effects |
+| [@react-native-async-storage](https://react-native-async-storage.github.io/) | Local storage for favorites |
+| [@expo/vector-icons](https://docs.expo.dev/guides/icons/) | MaterialCommunityIcons vector graphics |
 | [OpenWeatherMap API](https://openweathermap.org/api) | Weather, forecast & air pollution data |
+| [RainViewer API](https://www.rainviewer.com/api.html) | Live precipitation radar maps |
 
 ---
 
@@ -59,9 +64,15 @@ WeatherAppRN/
     │   ├── CurrentWeather.tsx        # Main weather display card
     │   ├── Highlights.tsx            # AQI, sunrise/sunset, humidity, etc.
     │   ├── HourlyForecast.tsx        # Horizontal hourly temp & wind sliders
-    │   └── FiveDayForecast.tsx       # 5-day forecast list
+    │   ├── FiveDayForecast.tsx       # 5-day forecast list
+    │   ├── GlassCard.tsx             # Reusable frosted glass wrapper
+    │   └── WeatherBackground.tsx     # Animated or dynamic background wrapper
+    ├── context/
+    │   └── FavoritesContext.tsx      # Global state for favorite cities
     ├── screens/
-    │   └── HomeScreen.tsx            # Main screen orchestrator
+    │   ├── HomeScreen.tsx            # Main weather dashboard
+    │   ├── MapScreen.tsx             # Live radar map screen
+    │   └── FavoritesScreen.tsx       # Saved locations manager
     ├── theme/
     │   └── theme.ts                  # Design tokens (colors, fonts, radii)
     └── utils/
@@ -145,6 +156,7 @@ This app uses the following [OpenWeatherMap](https://openweathermap.org/api) end
 | `/data/2.5/air_pollution` | Air quality index & pollutants |
 | `/geo/1.0/direct` | City name → coordinates (geocoding) |
 | `/geo/1.0/reverse` | Coordinates → city name (reverse geocoding) |
+| `RainViewer Map API` | Latest radar imagery tiles |
 
 ---
 

@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
+import mobileAds from 'react-native-google-mobile-ads';
 
 import { FavoritesProvider } from "./src/context/FavoritesContext";
 import { registerBackgroundFetchAsync } from "./src/services/BackgroundTasks";
@@ -13,6 +14,14 @@ import FavoritesScreen from "./src/screens/FavoritesScreen";
 import { theme } from "./src/theme/theme";
 
 const Tab = createBottomTabNavigator();
+
+// Initialize the Google Mobile Ads SDK
+mobileAds()
+  .initialize()
+  .then(adapterStatuses => {
+    // Initialization complete!
+    console.log('AdMob SDK initialized');
+  });
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
