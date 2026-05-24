@@ -1,8 +1,10 @@
 import React from "react";
-import { View, Text, Image, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "../theme/theme";
-import { getHours, mps_to_kmh } from "../utils/helpers";
-import { getWeatherIcon, getDirectionIcon } from "../utils/weatherIcons";
+import { getHours } from "../utils/helpers";
+import { getWeatherIcon } from "../utils/weatherIcons";
+import GlassCard from "./GlassCard";
 
 interface ForecastItem {
   dt: number;
@@ -20,13 +22,15 @@ export default function HourlyForecast({
   forecastList,
   timezone,
 }: HourlyForecastProps) {
-  const items = forecastList.slice(0, 8);
+  const items = forecastList.slice(0, 12);
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>Today at</Text>
+    <GlassCard style={styles.container}>
+      <View style={styles.header}>
+        <MaterialCommunityIcons name="clock-outline" size={16} color="rgba(255,255,255,0.6)" />
+        <Text style={styles.sectionTitle}>HOURLY FORECAST</Text>
+      </View>
 
-      {/* Temperature Slider */}
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -35,85 +39,59 @@ export default function HourlyForecast({
       >
         {items.map((item, index) => (
           <View key={`temp-${index}`} style={styles.sliderCard}>
-            <Text style={styles.time}>{getHours(item.dt, timezone)}</Text>
-            <Image
-              source={getWeatherIcon(item.weather[0].icon)}
+            <Text style={styles.time}>{index === 0 ? 'Now' : getHours(item.dt, timezone)}</Text>
+            <MaterialCommunityIcons
+              name={getWeatherIcon(item.weather[0].icon)}
+              size={28}
+              color="#fff"
               style={styles.icon}
-              resizeMode="contain"
             />
             <Text style={styles.value}>{Math.round(item.main.temp)}°</Text>
           </View>
         ))}
       </ScrollView>
-
-      {/* Wind Slider */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.slider}
-        contentContainerStyle={styles.sliderContent}
-      >
-        {items.map((item, index) => (
-          <View key={`wind-${index}`} style={styles.sliderCard}>
-            <Text style={styles.time}>{getHours(item.dt, timezone)}</Text>
-            <Image
-              source={getDirectionIcon()}
-              style={[
-                styles.icon,
-                {
-                  transform: [
-                    { rotate: `${item.wind.deg - 180}deg` },
-                  ],
-                },
-              ]}
-              resizeMode="contain"
-            />
-            <Text style={styles.value}>
-              {Math.round(mps_to_kmh(item.wind.speed))} km/h
-            </Text>
-          </View>
-        ))}
-      </ScrollView>
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 12,
+    marginBottom: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 6,
   },
   sectionTitle: {
-    color: theme.colors.onSurface,
-    fontSize: theme.fonts.title2,
-    fontWeight: theme.fontWeights.semiBold,
-    marginBottom: 4,
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
   },
   slider: {
     marginHorizontal: -4,
   },
   sliderContent: {
     paddingHorizontal: 4,
-    gap: 10,
+    gap: 16,
   },
   sliderCard: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.r16,
-    padding: 14,
     alignItems: "center",
-    minWidth: 100,
-    ...theme.shadows.shadow1,
+    minWidth: 50,
   },
   time: {
-    color: theme.colors.onSurface,
-    fontSize: theme.fonts.body3,
+    color: '#fff',
+    fontSize: 15,
+    fontWeight: '500',
   },
   icon: {
-    width: 44,
-    height: 44,
-    marginVertical: 10,
+    marginVertical: 12,
   },
   value: {
-    color: theme.colors.onSurface,
-    fontSize: theme.fonts.body3,
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '500',
   },
 });

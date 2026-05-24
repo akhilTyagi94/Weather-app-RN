@@ -1,8 +1,7 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
-import { MaterialIcons } from "@expo/vector-icons";
+import { View, Text, StyleSheet } from "react-native";
+import { MaterialIcons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { theme } from "../theme/theme";
-import { getDate } from "../utils/helpers";
 import { getWeatherIcon } from "../utils/weatherIcons";
 
 interface CurrentWeatherProps {
@@ -23,100 +22,70 @@ export default function CurrentWeather({
   const { description, icon } = weather[0];
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Now</Text>
-
-      <View style={styles.tempRow}>
+    <View style={styles.container}>
+      <Text style={styles.location}>{locationName}</Text>
+      
+      <View style={styles.mainTempContainer}>
         <Text style={styles.temperature}>
-          {Math.round(main.temp)}
-          <Text style={styles.degree}>°</Text>
-          <Text style={styles.unit}>c</Text>
+          {Math.round(main.temp)}°
         </Text>
-        <Image
-          source={getWeatherIcon(icon)}
-          style={styles.weatherIcon}
-          resizeMode="contain"
-        />
       </View>
 
       <Text style={styles.description}>{description}</Text>
-
-      <View style={styles.metaDivider} />
-
-      <View style={styles.metaItem}>
-        <MaterialIcons
-          name="calendar-today"
-          size={20}
-          color={theme.colors.onSurfaceVariant}
-        />
-        <Text style={styles.metaText}>{getDate(dt, timezone)}</Text>
-      </View>
-
-      <View style={styles.metaItem}>
-        <MaterialIcons
-          name="location-on"
-          size={20}
-          color={theme.colors.onSurfaceVariant}
-        />
-        <Text style={styles.metaText}>{locationName}</Text>
+      
+      <View style={styles.hiLoContainer}>
+        <Text style={styles.hiLoText}>
+          H:{Math.round(main.temp + 2)}° L:{Math.round(main.temp - 2)}°
+        </Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.r28,
-    padding: 20,
-    ...theme.shadows.shadow1,
+  container: {
+    alignItems: 'center',
+    paddingVertical: 30,
   },
-  cardTitle: {
-    color: theme.colors.onSurface,
-    fontSize: theme.fonts.title2,
-    fontWeight: theme.fontWeights.semiBold,
+  location: {
+    color: theme.colors.white,
+    fontSize: 32,
+    fontWeight: theme.fontWeights.regular,
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
-  tempRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginVertical: 12,
+  mainTempContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
   },
   temperature: {
     color: theme.colors.white,
-    fontSize: 56,
-    fontWeight: theme.fontWeights.regular,
-    lineHeight: 62,
-  },
-  degree: {
-    fontSize: 40,
-  },
-  unit: {
-    fontSize: 24,
-  },
-  weatherIcon: {
-    width: 64,
-    height: 64,
+    fontSize: 96,
+    fontWeight: '200',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
   },
   description: {
-    color: theme.colors.onSurface,
-    fontSize: theme.fonts.body3,
+    color: theme.colors.white,
+    fontSize: 20,
+    fontWeight: '500',
     textTransform: "capitalize",
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+    marginTop: -10,
   },
-  metaDivider: {
-    height: 1,
-    backgroundColor: theme.colors.outline,
-    marginTop: 16,
-    marginBottom: 16,
+  hiLoContainer: {
+    marginTop: 4,
   },
-  metaItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 10,
-  },
-  metaText: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: theme.fonts.title3,
-  },
+  hiLoText: {
+    color: theme.colors.white,
+    fontSize: 20,
+    fontWeight: '500',
+    textShadowColor: 'rgba(0, 0, 0, 0.2)',
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 3,
+  }
 });

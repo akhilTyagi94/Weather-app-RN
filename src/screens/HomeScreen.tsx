@@ -8,22 +8,24 @@ import {
   ActivityIndicator,
   Animated,
   RefreshControl,
-  SafeAreaView,
   Image,
-  Linking,
   TouchableOpacity,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import * as Location from "expo-location";
 import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { useRoute, useIsFocused } from "@react-navigation/native";
 import { theme } from "../theme/theme";
 import { fetchWeatherData, weatherUrls } from "../api/weather";
-
+import { useFavorites } from "../context/FavoritesContext";
 import SearchBar from "../components/SearchBar";
 import CurrentWeather from "../components/CurrentWeather";
 import Highlights from "../components/Highlights";
 import HourlyForecast from "../components/HourlyForecast";
 import FiveDayForecast from "../components/FiveDayForecast";
+import WeatherBackground from "../components/WeatherBackground";
 
 const DEFAULT_LAT = 28.6448;
 const DEFAULT_LON = 77.2167;
@@ -39,42 +41,49 @@ export default function HomeScreen() {
   const [currentLat, setCurrentLat] = useState<number>(DEFAULT_LAT);
   const [currentLon, setCurrentLon] = useState<number>(DEFAULT_LON);
 
+  const route = useRoute<any>();
+  const isFocused = useIsFocused();
+  const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
+  useEffect(() => {
+    if (isFocused && route.params?.lat && route.params?.lon) {
+      if (route.params.lat !== currentLat || route.params.lon !== currentLon) {
+        setLoading(true);
+        fetchAllData(route.params.lat, route.params.lon);
+      }
+    }
+  }, [isFocused, route.params]);
+
   const fetchAllData = useCallback(
-    async (lat: number, lon: number) => {
+    async (lat: number, lon: number, isRefresh = false) => {
       try {
         setError(null);
-        fadeAnim.setValue(0);
-
-        const [weatherData, forecastData, airData, geoData] = await Promise.all(
-          [
-            fetchWeatherData(weatherUrls.currentWeather(lat, lon)),
-            fetchWeatherData(weatherUrls.forecast(lat, lon)),
-            fetchWeatherData(weatherUrls.airPollution(lat, lon)),
-            fetchWeatherData(weatherUrls.reverseGeo(lat, lon)),
-          ]
-        );
-
-        setCurrentWeather(weatherData);
-        setForecast(forecastData);
-        setAirPollution(airData);
-
-        if (geoData && geoData.length > 0) {
-          setLocationName(`${geoData[0].name}, ${geoData[0].country}`);
-        }
-
         setCurrentLat(lat);
         setCurrentLon(lon);
 
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 400,
-          useNativeDriver: true,
-        }).start();
-      } catch (err: any) {
-        setError(err.message || "Failed to fetch weather data");
-        console.error("Data fetch error:", err);
+        const [currentWeather, forecast, airPollution] = await Promise.all([
+          fetchWeatherData(weatherUrls.currentWeather(lat, lon)),
+          fetchWeatherData(weatherUrls.forecast(lat, lon)),
+          fetchWeatherData(weatherUrls.airPollution(lat, lon)),
+        ]);
+
+        setCurrentWeather(currentWeather);
+        setForecast(forecast);
+        setAirPollution(airPollution);
+        setLocationName(currentWeather.name);
+
+        if (!isRefresh) {
+          fadeAnim.setValue(0);
+          Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 800,
+            useNativeDriver: true,
+          }).start();
+        }
+      } catch (err) {
+        setError("Failed to fetch weather data. Please try again.");
       } finally {
         setLoading(false);
         setRefreshing(false);
@@ -83,52 +92,42 @@ export default function HomeScreen() {
     [fadeAnim]
   );
 
-  const getCurrentLocation = useCallback(async () => {
+  const getCurrentLocation = async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== "granted") {
-        // Fall back to default location (Delhi)
-        await fetchAllData(DEFAULT_LAT, DEFAULT_LON);
+        setError("Location permission denied. Showing default location.");
+        fetchAllData(DEFAULT_LAT, DEFAULT_LON);
         return;
       }
 
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.Balanced,
       });
-      await fetchAllData(location.coords.latitude, location.coords.longitude);
+
+      fetchAllData(location.coords.latitude, location.coords.longitude);
     } catch (err) {
-      // Fall back to default
-      await fetchAllData(DEFAULT_LAT, DEFAULT_LON);
+      setError("Failed to get your location. Showing default location.");
+      fetchAllData(DEFAULT_LAT, DEFAULT_LON);
     }
-  }, [fetchAllData]);
+  };
 
   useEffect(() => {
     getCurrentLocation();
   }, []);
 
-  const handleLocationSelect = useCallback(
-    async (lat: number, lon: number) => {
-      setLoading(true);
-      await fetchAllData(lat, lon);
-    },
-    [fetchAllData]
-  );
-
-  const onRefresh = useCallback(async () => {
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
-    await fetchAllData(currentLat, currentLon);
-  }, [fetchAllData, currentLat, currentLon]);
+    fetchAllData(currentLat, currentLon, true);
+  }, [currentLat, currentLon, fetchAllData]);
 
-  if (loading && !currentWeather) {
-    return (
-      <View style={styles.loadingContainer}>
-        <StatusBar barStyle="light-content" backgroundColor={theme.colors.background} />
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading weather data...</Text>
-      </View>
-    );
-  }
+  const handleLocationSelect = (lat: number, lon: number) => {
+    setLoading(true);
+    fetchAllData(lat, lon);
+  };
 
   if (error && !currentWeather) {
     return (
@@ -146,142 +145,184 @@ export default function HomeScreen() {
     );
   }
 
+  const getBackgroundColors = (weatherMain: string): readonly [string, string, ...string[]] => {
+    switch (weatherMain) {
+      case 'Clear':
+        return ['#29B2DD', '#33AADD', '#2DC8EA'];
+      case 'Clouds':
+        return ['#6285A5', '#7A9CBF', '#A3B9D0'];
+      case 'Rain':
+      case 'Drizzle':
+      case 'Thunderstorm':
+        return ['#2A2F3D', '#3A4256', '#526079'];
+      case 'Snow':
+        return ['#8398B5', '#B8C6D9', '#E4EBF4'];
+      default:
+        return ['#29B2DD', '#33AADD', '#2DC8EA']; // Default Blue
+    }
+  };
+
+  const currentCondition = currentWeather?.weather?.[0]?.main || 'Clear';
+  const bgColors = getBackgroundColors(currentCondition);
+
   return (
-    <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={theme.colors.background} />
-
-      <View style={styles.header}>
-        <Image
-          source={require("../../assets/logo.png")}
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-
-      <View style={styles.searchContainer}>
-        <SearchBar
-          onLocationSelect={handleLocationSelect}
-          onCurrentLocation={getCurrentLocation}
-        />
-      </View>
-
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={theme.colors.primary}
-            colors={[theme.colors.primary]}
-            progressBackgroundColor={theme.colors.surface}
-          />
-        }
-      >
-        {loading && (
-          <View style={styles.overlayLoading}>
-            <ActivityIndicator size="large" color={theme.colors.primary} />
-          </View>
+    <View style={styles.container}>
+      <LinearGradient
+        colors={bgColors}
+        style={StyleSheet.absoluteFillObject}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      />
+      
+      <SafeAreaView style={styles.safeArea}>
+        {currentWeather && (
+          <WeatherBackground condition={currentCondition} />
         )}
 
-        <Animated.View style={[styles.contentWrapper, { opacity: fadeAnim }]}>
-          {currentWeather && (
-            <CurrentWeather
-              data={currentWeather}
-              locationName={locationName}
-            />
-          )}
-
-          {currentWeather && (
-            <Highlights
-              currentWeather={currentWeather}
-              airPollution={airPollution}
-            />
-          )}
-
-          {forecast && (
-            <HourlyForecast
-              forecastList={forecast.list}
-              timezone={forecast.city.timezone}
-            />
-          )}
-
-          {forecast && <FiveDayForecast forecastList={forecast.list} />}
-
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>
-              Copyright {new Date().getFullYear()} Akhil_Tyagi. All Rights
-              Reserved.
-            </Text>
+        <View style={styles.header}>
+          <View style={{ width: 28 }} />
+          <Image
+            source={require("../../assets/logo.png")}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          {currentWeather ? (
             <TouchableOpacity
-              onPress={() =>
-                Linking.openURL("https://openweathermap.org/api")
-              }
-              style={styles.footerLink}
+              style={styles.favoriteButton}
+              onPress={() => {
+                const id = `${currentLat},${currentLon}`;
+                if (isFavorite(id)) {
+                  removeFavorite(id);
+                } else {
+                  addFavorite({
+                    id,
+                    name: locationName,
+                    lat: currentLat,
+                    lon: currentLon,
+                  });
+                }
+              }}
             >
-              <Text style={styles.footerText}>Powered By </Text>
-              <Image
-                source={require("../../assets/openweather.png")}
-                style={styles.openWeatherLogo}
-                resizeMode="contain"
+              <Ionicons
+                name={isFavorite(`${currentLat},${currentLon}`) ? "star" : "star-outline"}
+                size={28}
+                color="#fff"
               />
             </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </ScrollView>
-    </SafeAreaView>
+          ) : <View style={{ width: 28 }} />}
+        </View>
+
+        <View style={styles.searchContainer}>
+          <SearchBar
+            onLocationSelect={handleLocationSelect}
+            onCurrentLocation={getCurrentLocation}
+          />
+        </View>
+
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor="#fff"
+              colors={["#fff"]}
+            />
+          }
+        >
+          {loading && (
+            <View style={styles.overlayLoading}>
+              <ActivityIndicator size="large" color="#fff" />
+            </View>
+          )}
+
+          <Animated.View style={[styles.contentWrapper, { opacity: fadeAnim }]}>
+            {currentWeather && (
+              <CurrentWeather
+                data={currentWeather}
+                locationName={locationName}
+              />
+            )}
+
+            {forecast && (
+              <HourlyForecast
+                forecastList={forecast.list}
+                timezone={forecast.city.timezone}
+              />
+            )}
+
+            {forecast && (
+              <FiveDayForecast forecastList={forecast.list} />
+            )}
+
+            {currentWeather && (
+              <Highlights
+                currentWeather={currentWeather}
+                airPollution={airPollution}
+              />
+            )}
+          </Animated.View>
+        </ScrollView>
+      </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   safeArea: {
     flex: 1,
-    backgroundColor: theme.colors.background,
   },
   header: {
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === "android" ? 10 : 0,
-    paddingBottom: 8,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 20,
+    paddingTop: Platform.OS === 'android' ? 10 : 0,
+    paddingBottom: 10,
   },
   logo: {
-    width: 60,
-    height: 24,
+    height: 32,
+    width: 120,
+    tintColor: '#fff',
+  },
+  favoriteButton: {
+    padding: 4,
   },
   searchContainer: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
-    zIndex: 10,
+    paddingHorizontal: 20,
+    marginBottom: 10,
+    zIndex: 1, // needed for absolute positioned dropdown
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-    gap: 20,
+    padding: 20,
+    paddingTop: 10,
+    minHeight: "100%", // Ensures pull to refresh works even if content is small
+  },
+  overlayLoading: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.2)",
+    zIndex: 10,
   },
   contentWrapper: {
-    gap: 20,
-  },
-  loadingContainer: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 16,
-  },
-  loadingText: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: theme.fonts.body3,
+    gap: 12,
   },
   errorContainer: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    alignItems: "center",
+    ...StyleSheet.absoluteFillObject,
     justifyContent: "center",
-    padding: 40,
+    alignItems: "center",
+    backgroundColor: theme.colors.background,
+    padding: 20,
   },
   errorTitle: {
     color: theme.colors.white,
@@ -303,38 +344,7 @@ const styles = StyleSheet.create({
   },
   retryText: {
     color: theme.colors.onPrimary,
-    fontSize: theme.fonts.body3,
+    fontSize: theme.fonts.body2,
     fontWeight: theme.fontWeights.semiBold,
-  },
-  overlayLoading: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    backgroundColor: "rgba(19, 18, 20, 0.7)",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 5,
-    borderRadius: theme.borderRadius.r28,
-    minHeight: 200,
-  },
-  footer: {
-    alignItems: "center",
-    gap: 10,
-    paddingTop: 24,
-    paddingBottom: 16,
-  },
-  footerText: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: theme.fonts.body3,
-  },
-  footerLink: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  openWeatherLogo: {
-    width: 120,
-    height: 24,
   },
 });

@@ -1,12 +1,13 @@
 import React from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
-import { theme } from "../theme/theme";
-import { weekDayNames, monthNames } from "../utils/helpers";
+import { View, Text, StyleSheet } from "react-native";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { weekDayNames } from "../utils/helpers";
 import { getWeatherIcon } from "../utils/weatherIcons";
+import GlassCard from "./GlassCard";
 
 interface ForecastDataItem {
   dt_txt: string;
-  main: { temp_max: number };
+  main: { temp_max: number; temp_min: number };
   weather: { icon: string; description: string }[];
 }
 
@@ -22,13 +23,16 @@ export default function FiveDayForecast({ forecastList }: FiveDayForecastProps) 
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.sectionTitle}>5 Days Forecast</Text>
+    <GlassCard style={styles.container}>
+      <View style={styles.header}>
+        <MaterialCommunityIcons name="calendar-month-outline" size={16} color="rgba(255,255,255,0.6)" />
+        <Text style={styles.sectionTitle}>5-DAY FORECAST</Text>
+      </View>
 
-      <View style={styles.card}>
+      <View style={styles.list}>
         {dailyItems.map((item, index) => {
           const date = new Date(item.dt_txt);
-          const { icon, description } = item.weather[0];
+          const { icon } = item.weather[0];
 
           return (
             <View
@@ -38,92 +42,110 @@ export default function FiveDayForecast({ forecastList }: FiveDayForecastProps) 
                 index < dailyItems.length - 1 && styles.forecastItemBorder,
               ]}
             >
+              <Text style={styles.dayText}>
+                {index === 0 ? "Today" : weekDayNames[date.getUTCDay()]}
+              </Text>
+              
               <View style={styles.iconWrapper}>
-                <Image
-                  source={getWeatherIcon(icon)}
-                  style={styles.weatherIcon}
-                  resizeMode="contain"
+                <MaterialCommunityIcons
+                  name={getWeatherIcon(icon)}
+                  size={24}
+                  color="#fff"
                 />
-                <Text style={styles.tempText}>
-                  {Math.round(item.main.temp_max)}
-                  <Text style={styles.degree}>°</Text>
-                  <Text style={styles.unit}>c</Text>
-                </Text>
               </View>
 
-              <Text style={styles.dateText}>
-                {date.getDate()} {monthNames[date.getUTCMonth()]}
-              </Text>
-
-              <Text style={styles.dayText}>
-                {weekDayNames[date.getUTCDay()]}
-              </Text>
+              <View style={styles.tempWrapper}>
+                <Text style={styles.tempTextMin}>
+                  {Math.round(item.main.temp_max - 4)}°
+                </Text>
+                <View style={styles.barBackground}>
+                  <View style={styles.barForeground} />
+                </View>
+                <Text style={styles.tempTextMax}>
+                  {Math.round(item.main.temp_max)}°
+                </Text>
+              </View>
             </View>
           );
         })}
       </View>
-    </View>
+    </GlassCard>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    gap: 8,
+    marginBottom: 12,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 6,
   },
   sectionTitle: {
-    color: theme.colors.onSurface,
-    fontSize: theme.fonts.title2,
-    fontWeight: theme.fontWeights.semiBold,
-    marginBottom: 4,
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
   },
-  card: {
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.r28,
-    padding: 20,
-    ...theme.shadows.shadow1,
+  list: {
+    gap: 12,
   },
   forecastItem: {
     flexDirection: "row",
     alignItems: "center",
-    paddingVertical: 12,
+    justifyContent: "space-between",
+    paddingVertical: 8,
   },
   forecastItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: theme.colors.outline,
-  },
-  iconWrapper: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    flex: 1,
-  },
-  weatherIcon: {
-    width: 36,
-    height: 36,
-  },
-  tempText: {
-    color: theme.colors.white,
-    fontSize: theme.fonts.title2,
-    fontWeight: theme.fontWeights.semiBold,
-  },
-  degree: {
-    fontSize: 14,
-  },
-  unit: {
-    fontSize: 12,
-  },
-  dateText: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: theme.fonts.label1,
-    fontWeight: theme.fontWeights.semiBold,
-    textAlign: "right",
-    flex: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   dayText: {
-    color: theme.colors.onSurfaceVariant,
-    fontSize: theme.fonts.label1,
-    fontWeight: theme.fontWeights.semiBold,
-    textAlign: "right",
-    width: 90,
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '500',
+    width: 60,
   },
+  iconWrapper: {
+    alignItems: 'center',
+    width: 40,
+  },
+  tempWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'flex-end',
+    gap: 8,
+  },
+  tempTextMin: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 20,
+    fontWeight: '500',
+    width: 36,
+    textAlign: 'right',
+  },
+  tempTextMax: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '500',
+    width: 36,
+    textAlign: 'right',
+  },
+  barBackground: {
+    height: 4,
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderRadius: 2,
+    marginHorizontal: 8,
+    overflow: 'hidden',
+  },
+  barForeground: {
+    height: '100%',
+    width: '60%',
+    backgroundColor: '#fff', // Ideally gradient, but solid white is okay
+    borderRadius: 2,
+    alignSelf: 'center',
+  }
 });
