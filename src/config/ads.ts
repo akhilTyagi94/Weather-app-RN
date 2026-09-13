@@ -5,9 +5,9 @@ import { TestIds } from "react-native-google-mobile-ads";
 // Fill these in before a store release -- until then, dev builds always
 // fall back to Google's TestIds below, so nothing needs to change locally.
 const PROD_BANNER_AD_UNIT_ID = Platform.select({
-  ios: "ca-app-pub-REPLACE_WITH_YOUR_IOS_APP_ID/REPLACE_WITH_YOUR_IOS_BANNER_UNIT_ID",
+  ios: "ca-app-pub-5956785493977676/7834977117",
   android:
-    "ca-app-pub-REPLACE_WITH_YOUR_ANDROID_APP_ID/REPLACE_WITH_YOUR_ANDROID_BANNER_UNIT_ID",
+    "ca-app-pub-5956785493977676/6864289181",
   default: TestIds.BANNER,
 });
 
