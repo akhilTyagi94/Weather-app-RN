@@ -4,6 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
+import * as Location from 'expo-location';
 import mobileAds from 'react-native-google-mobile-ads';
 
 import { FavoritesProvider } from "./src/context/FavoritesContext";
@@ -43,7 +44,18 @@ export default function App() {
         finalStatus = status;
       }
       if (finalStatus === 'granted') {
-        await registerBackgroundFetchAsync();
+        const { status: fgLocationStatus } = await Location.getForegroundPermissionsAsync();
+        const grantedFg =
+          fgLocationStatus === 'granted'
+            ? fgLocationStatus
+            : (await Location.requestForegroundPermissionsAsync()).status;
+
+        if (grantedFg === 'granted') {
+          const { status: bgLocationStatus } = await Location.requestBackgroundPermissionsAsync();
+          if (bgLocationStatus === 'granted') {
+            await registerBackgroundFetchAsync();
+          }
+        }
       }
     })();
   }, []);

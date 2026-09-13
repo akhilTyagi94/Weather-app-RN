@@ -9,7 +9,10 @@ const BACKGROUND_FETCH_TASK = 'weather-background-fetch';
 // Define the task
 TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
   try {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+    // A background task can't prompt for permission (there's no UI to show
+    // while the app isn't active) -- it can only check what was already
+    // granted when the user set up alerts in the foreground.
+    const { status } = await Location.getBackgroundPermissionsAsync();
     if (status !== 'granted') {
       return BackgroundFetch.BackgroundFetchResult.Failed;
     }

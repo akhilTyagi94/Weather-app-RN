@@ -17,9 +17,10 @@ import * as Location from "expo-location";
 import { LinearGradient } from "expo-linear-gradient";
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute, useIsFocused } from "@react-navigation/native";
-import { BannerAd, BannerAdSize, TestIds } from 'react-native-google-mobile-ads';
+import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
 import { theme } from "../theme/theme";
+import { BANNER_AD_UNIT_ID } from "../config/ads";
 import { fetchWeatherData, weatherUrls } from "../api/weather";
 import { useFavorites } from "../context/FavoritesContext";
 import SearchBar from "../components/SearchBar";
@@ -271,7 +272,7 @@ export default function HomeScreen() {
         {/* Anchored Adaptive Banner Ad */}
         <View style={styles.adContainer}>
           <BannerAd
-            unitId={TestIds.BANNER}
+            unitId={BANNER_AD_UNIT_ID}
             size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
           />
         </View>

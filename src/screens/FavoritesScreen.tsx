@@ -24,11 +24,7 @@ export default function FavoritesScreen() {
           renderItem={({ item }) => (
             <TouchableOpacity 
               style={styles.card}
-              onPress={() => {
-                // In a full implementation, we would pass these coordinates back to HomeScreen
-                // via navigation params or a global selected city state.
-                navigation.navigate('Home', { lat: item.lat, lon: item.lon });
-              }}
+              onPress={() => navigation.navigate('Home', { lat: item.lat, lon: item.lon })}
             >
               <Text style={styles.cityName}>{item.name}</Text>
               <TouchableOpacity onPress={() => removeFavorite(item.id)} style={styles.deleteBtn}>

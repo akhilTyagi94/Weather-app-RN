@@ -25,6 +25,13 @@
     },
     "plugins": [
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "WeatherNow uses your location in the background to alert you about severe weather in your area.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
         "react-native-google-mobile-ads",
         {
           "androidAppId": "ca-app-pub-3940256099942544~3347511713",
@@ -36,7 +43,8 @@
         {
           "userTrackingPermission": "This app uses your data to serve personalized ads."
         }
-      ]
+      ],
+      "expo-font"
     ]
   }
 }
