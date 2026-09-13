@@ -21,6 +21,7 @@ import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 
 import { theme } from "../theme/theme";
 import { BANNER_AD_UNIT_ID } from "../config/ads";
+import { useAdsReady } from "../services/ads";
 import { fetchWeatherData, weatherUrls } from "../api/weather";
 import { useFavorites } from "../context/FavoritesContext";
 import SearchBar from "../components/SearchBar";
@@ -47,6 +48,7 @@ export default function HomeScreen() {
   const route = useRoute<any>();
   const isFocused = useIsFocused();
   const { isFavorite, addFavorite, removeFavorite } = useFavorites();
+  const adsReady = useAdsReady();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -269,13 +271,16 @@ export default function HomeScreen() {
           </Animated.View>
         </ScrollView>
 
-        {/* Anchored Adaptive Banner Ad */}
-        <View style={styles.adContainer}>
-          <BannerAd
-            unitId={BANNER_AD_UNIT_ID}
-            size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
-          />
-        </View>
+        {/* Anchored Adaptive Banner Ad -- withheld until consent (and ATT on
+            iOS) has been gathered and the Mobile Ads SDK has initialized. */}
+        {adsReady && (
+          <View style={styles.adContainer}>
+            <BannerAd
+              unitId={BANNER_AD_UNIT_ID}
+              size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}
+            />
+          </View>
+        )}
       </SafeAreaView>
     </View>
   );

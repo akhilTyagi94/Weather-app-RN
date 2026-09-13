@@ -5,24 +5,16 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 import * as Location from 'expo-location';
-import mobileAds from 'react-native-google-mobile-ads';
 
 import { FavoritesProvider } from "./src/context/FavoritesContext";
 import { registerBackgroundFetchAsync } from "./src/services/BackgroundTasks";
+import { initializeAds } from "./src/services/ads";
 import HomeScreen from "./src/screens/HomeScreen";
 import MapScreen from "./src/screens/MapScreen";
 import FavoritesScreen from "./src/screens/FavoritesScreen";
 import { theme } from "./src/theme/theme";
 
 const Tab = createBottomTabNavigator();
-
-// Initialize the Google Mobile Ads SDK
-mobileAds()
-  .initialize()
-  .then(adapterStatuses => {
-    // Initialization complete!
-    console.log('AdMob SDK initialized');
-  });
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -35,6 +27,12 @@ Notifications.setNotificationHandler({
 });
 
 export default function App() {
+  React.useEffect(() => {
+    // Gathers ad consent (and ATT on iOS) and initializes the Mobile Ads SDK.
+    // Runs independently of the notification/location flow below.
+    initializeAds();
+  }, []);
+
   React.useEffect(() => {
     (async () => {
       const { status: existingStatus } = await Notifications.getPermissionsAsync();
