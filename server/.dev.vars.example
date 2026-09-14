@@ -1,0 +1,5 @@
+# Copy this file to .dev.vars for local `wrangler dev` testing.
+# In production, set these with `wrangler secret put <NAME>` instead --
+# they must never be committed.
+OWM_API_KEY=your_openweathermap_api_key_here
+PROXY_SHARED_SECRET=choose_a_random_shared_secret

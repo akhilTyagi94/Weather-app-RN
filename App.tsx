@@ -12,6 +12,7 @@ import { initializeAds } from "./src/services/ads";
 import HomeScreen from "./src/screens/HomeScreen";
 import MapScreen from "./src/screens/MapScreen";
 import FavoritesScreen from "./src/screens/FavoritesScreen";
+import WellnessScreen from "./src/screens/WellnessScreen";
 import { theme } from "./src/theme/theme";
 
 const Tab = createBottomTabNavigator();
@@ -80,6 +81,8 @@ export default function App() {
                   iconName = focused ? 'map' : 'map-outline';
                 } else if (route.name === 'Favorites') {
                   iconName = focused ? 'star' : 'star-outline';
+                } else if (route.name === 'Wellness') {
+                  iconName = focused ? 'heart' : 'heart-outline';
                 }
                 return <Ionicons name={iconName} size={size} color={color} />;
               },
@@ -88,6 +91,7 @@ export default function App() {
             <Tab.Screen name="Home" component={HomeScreen} />
             <Tab.Screen name="Map" component={MapScreen} />
             <Tab.Screen name="Favorites" component={FavoritesScreen} />
+            <Tab.Screen name="Wellness" component={WellnessScreen} />
           </Tab.Navigator>
         </NavigationContainer>
       </FavoritesProvider>
