@@ -208,7 +208,7 @@ function getNutritionRecommendation(input: RecommendationWeatherInput, band: Tem
     tips.push("Vitamin C-rich foods to support your immune system");
     tips.push("Warm fluids like tea or broth alongside your regular water intake");
   } else {
-    summary = "A balanced diet suits today's mild conditions well.";
+    summary = "A balanced diet suits today's conditions well.";
     tips.push("Seasonal fruits and vegetables for balanced nutrients");
     tips.push("Stay consistent with your regular, balanced meals");
   }

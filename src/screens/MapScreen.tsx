@@ -7,7 +7,7 @@ import GlassCard from '../components/GlassCard';
 
 export default function MapScreen() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);
-  const [radarTime, setRadarTime] = useState<number | null>(null);
+  const [radarTileUrl, setRadarTileUrl] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -16,15 +16,16 @@ export default function MapScreen() {
         let loc = await Location.getCurrentPositionAsync({});
         setLocation(loc);
       }
-      
-      // Fetch latest RainViewer radar timestamp
+
+      // Fetch the latest RainViewer radar frame. RainViewer's v2 API keys
+      // frames by an opaque `path`, not the frame's `time` -- tile requests
+      // built from `time` 404/410.
       try {
         const res = await fetch('https://api.rainviewer.com/public/weather-maps.json');
         const data = await res.json();
-        // Get the latest past timestamp
-        if (data && data.radar && data.radar.past && data.radar.past.length > 0) {
-          const latest = data.radar.past[data.radar.past.length - 1].time;
-          setRadarTime(latest);
+        if (data?.host && data?.radar?.past?.length > 0) {
+          const latest = data.radar.past[data.radar.past.length - 1].path;
+          setRadarTileUrl(`${data.host}${latest}/256/{z}/{x}/{y}/2/1_1.png`);
         }
       } catch (err) {
         console.error("Failed to fetch RainViewer data", err);
@@ -57,9 +58,9 @@ export default function MapScreen() {
             showsUserLocation={true}
             userInterfaceStyle="dark"
           >
-            {radarTime && (
+            {radarTileUrl && (
               <UrlTile
-                urlTemplate={`https://tilecache.rainviewer.com/v2/radar/${radarTime}/256/{z}/{x}/{y}/2/1_1.png`}
+                urlTemplate={radarTileUrl}
                 maximumZ={12}
                 flipY={false}
                 zIndex={1}
