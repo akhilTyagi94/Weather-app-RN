@@ -19,6 +19,13 @@
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "/Users/akhiltyagi/.appstoreconnect/private_keys/AuthKey_M95T88HZ57.p8",
+        "ascApiKeyId": "M95T88HZ57",
+        "ascApiKeyIssuerId": "5b5090c8-35a8-45c9-89a1-ac98677927a7",
+        "appleTeamId": "2W3TY2HUBC"
+      }
+    }
   }
 }
