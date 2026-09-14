@@ -16,6 +16,8 @@ A beautiful, feature-rich weather application built with **React Native** and **
 - 🕐 **Hourly Forecast** — Horizontally scrollable temperature and wind cards for the next 8 intervals
 - 📅 **10-Day Style Forecast** — Daily high/low temperatures with crisp vector weather icons
 - 🌬️ **Today's Highlights** — Air Quality Index (PM₂.₅, SO₂, NO₂, O₃), Sunrise & Sunset, Humidity, Pressure, Visibility, and Feels Like
+- 💚 **Wellness Tab** — Weather-driven clothing, hydration, nutrition, exercise, and precaution suggestions from a modular recommendation engine (general wellness guidance only, not medical advice)
+- 📢 **Ads** — Banner ads via Google AdMob (with GDPR/UMP consent and iOS App Tracking Transparency)
 - 🔄 **Pull-to-Refresh** — Native swipe-down gesture to reload weather data
 - 🎨 **Apple Weather Style UI** — Premium frosted glassmorphism cards (`expo-blur`) and dynamic gradient backgrounds based on live weather conditions
 
@@ -43,6 +45,8 @@ A beautiful, feature-rich weather application built with **React Native** and **
 | [@expo/vector-icons](https://docs.expo.dev/guides/icons/) | MaterialCommunityIcons vector graphics |
 | [OpenWeatherMap API](https://openweathermap.org/api) | Weather, forecast & air pollution data |
 | [RainViewer API](https://www.rainviewer.com/api.html) | Live precipitation radar maps |
+| [Cloudflare Workers](https://workers.cloudflare.com/) | Proxy server (`server/`) that keeps the OpenWeatherMap key off the client |
+| [react-native-google-mobile-ads](https://docs.page/invertase/react-native-google-mobile-ads) | Banner ads via Google AdMob |
 
 ---
 
@@ -51,14 +55,17 @@ A beautiful, feature-rich weather application built with **React Native** and **
 ```
 WeatherAppRN/
 ├── App.tsx                          # App entry point
-├── .env                             # API key (not committed)
+├── .env                             # Proxy URL + shared secret (not committed)
+├── server/                          # Cloudflare Worker proxy (own package.json)
+│   ├── src/index.ts                 # Proxy handler -- holds the real OWM key
+│   └── wrangler.toml
 ├── assets/
 │   ├── weather_icons/               # Weather condition icons (19 PNGs)
 │   ├── logo.png                     # App logo
 │   └── openweather.png              # OpenWeather attribution
 └── src/
     ├── api/
-    │   └── weather.ts               # API client & URL builders
+    │   └── weather.ts               # Proxy client & URL builders
     ├── components/
     │   ├── SearchBar.tsx             # City search with dropdown results
     │   ├── CurrentWeather.tsx        # Main weather display card
@@ -66,18 +73,21 @@ WeatherAppRN/
     │   ├── HourlyForecast.tsx        # Horizontal hourly temp & wind sliders
     │   ├── FiveDayForecast.tsx       # 5-day forecast list
     │   ├── GlassCard.tsx             # Reusable frosted glass wrapper
+    │   ├── RecommendationCard.tsx    # Wellness tab's card primitive
     │   └── WeatherBackground.tsx     # Animated or dynamic background wrapper
     ├── context/
     │   └── FavoritesContext.tsx      # Global state for favorite cities
     ├── screens/
     │   ├── HomeScreen.tsx            # Main weather dashboard
     │   ├── MapScreen.tsx             # Live radar map screen
-    │   └── FavoritesScreen.tsx       # Saved locations manager
+    │   ├── FavoritesScreen.tsx       # Saved locations manager
+    │   └── WellnessScreen.tsx        # Weather-based lifestyle recommendations
     ├── theme/
     │   └── theme.ts                  # Design tokens (colors, fonts, radii)
     └── utils/
         ├── helpers.ts                # Date/time formatters & AQI data
-        └── weatherIcons.ts           # Static icon require() map
+        ├── weatherIcons.ts           # Static icon require() map
+        └── recommendationEngine.ts   # Pure weather -> wellness recommendation logic
 ```
 
 ---
@@ -89,7 +99,8 @@ WeatherAppRN/
 - [Node.js](https://nodejs.org/) (v20.19+ recommended)
 - [Expo CLI](https://docs.expo.dev/get-started/installation/)
 - [Expo Go](https://expo.dev/go) app on your phone (for testing)
-- An [OpenWeatherMap API key](https://openweathermap.org/api) (free or paid)
+- An [OpenWeatherMap API key](https://openweathermap.org/api) (free or paid) -- only needed for the proxy server, not the app itself
+- A [Cloudflare account](https://dash.cloudflare.com/sign-up) (free tier) to deploy the proxy server
 
 ### Installation
 
@@ -104,19 +115,33 @@ WeatherAppRN/
    npm install
    ```
 
-3. **Configure your API key**
+3. **Deploy the weather proxy server**
 
-   Open the `.env` file in the project root and replace the placeholder:
-   ```env
-   EXPO_PUBLIC_API_KEY=your_openweathermap_api_key_here
+   The app never talks to OpenWeatherMap directly -- it goes through a small Cloudflare Worker in `server/` that holds the real API key. See [server/.dev.vars.example](./server/.dev.vars.example) for the two secrets it needs.
+   ```bash
+   cd server
+   npm install
+   npx wrangler login
+   npx wrangler deploy
+   npx wrangler secret put OWM_API_KEY
+   npx wrangler secret put PROXY_SHARED_SECRET
+   cd ..
    ```
 
-4. **Start the development server**
+4. **Configure the app's env**
+
+   Open `.env` in the project root and point it at your deployed Worker, using the same secret you set above:
+   ```env
+   EXPO_PUBLIC_WEATHER_PROXY_URL=https://your-worker.your-subdomain.workers.dev
+   EXPO_PUBLIC_WEATHER_PROXY_KEY=same_value_as_PROXY_SHARED_SECRET
+   ```
+
+5. **Start the development server**
    ```bash
    npx expo start
    ```
 
-5. **Run on your device**
+6. **Run on your device**
    - Scan the QR code with **Expo Go** (Android) or the **Camera app** (iOS)
    - Or press `a` for Android emulator / `i` for iOS simulator
 
@@ -147,16 +172,17 @@ npx eas submit --platform ios
 
 ## 🔑 API Reference
 
-This app uses the following [OpenWeatherMap](https://openweathermap.org/api) endpoints:
+The app calls the following [OpenWeatherMap](https://openweathermap.org/api) endpoints, all routed through the `server/` proxy rather than directly:
 
 | Endpoint | Description |
 |---|---|
 | `/data/2.5/weather` | Current weather data |
 | `/data/2.5/forecast` | 5-day / 3-hour forecast |
 | `/data/2.5/air_pollution` | Air quality index & pollutants |
+| `/data/3.0/onecall` | UV index for the Wellness tab (requires OpenWeatherMap's One Call 3.0 subscription -- optional, degrades gracefully without it) |
 | `/geo/1.0/direct` | City name → coordinates (geocoding) |
 | `/geo/1.0/reverse` | Coordinates → city name (reverse geocoding) |
-| `RainViewer Map API` | Latest radar imagery tiles |
+| `RainViewer Map API` | Latest radar imagery tiles (called directly, no key required) |
 
 ---
 
