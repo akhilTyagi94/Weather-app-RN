@@ -26,16 +26,16 @@
 <body>
 
 <h1>Privacy Policy for WeatherNow</h1>
-<p class="updated">Last updated: September 13, 2026</p>
+<p class="updated">Last updated: September 15, 2026</p>
 
-<p>This Privacy Policy explains what information the WeatherNow mobile app ("WeatherNow", "the app", "we") collects, how it is used, and the choices you have. WeatherNow does not operate its own backend server and does not require you to create an account.</p>
+<p>This Privacy Policy explains what information the WeatherNow mobile app ("WeatherNow", "the app", "we") collects, how it is used, and the choices you have. WeatherNow does not require you to create an account. The app routes weather requests through a lightweight proxy server we operate; that server does not log, store, or retain any of your data — it only forwards your request to our weather data provider and returns the response.</p>
 
 <h2>Information We Collect</h2>
 
 <h3>Location Data</h3>
 <p>WeatherNow uses your device's location to show current weather conditions and, if you enable severe weather alerts, to check for severe weather in your area while the app is in the background.</p>
 <ul>
-  <li>Your coordinates are sent directly to our weather data provider, <a href="https://openweathermap.org/privacy-policy" target="_blank" rel="noopener">OpenWeatherMap</a>, solely to retrieve the weather for your location.</li>
+  <li>Your coordinates are sent to our proxy server, which forwards them to our weather data provider, <a href="https://openweathermap.org/privacy-policy" target="_blank" rel="noopener">OpenWeatherMap</a>, solely to retrieve the weather for your location. Our proxy server does not log or store your coordinates.</li>
   <li>We do not store your location history on any server we control.</li>
   <li>Background location access is used only to periodically check weather conditions for severe weather alerts, even when the app is closed. You can deny or revoke this at any time in your device's Settings.</li>
 </ul>
@@ -57,6 +57,7 @@
 <h2>How We Use Information</h2>
 <ul>
   <li>To show you current and forecast weather for your location.</li>
+  <li>To generate general wellness and lifestyle suggestions (clothing, hydration, nutrition, exercise, precautions) based on current weather conditions. These suggestions are calculated on your device from the weather data described above — no additional data is collected for this feature.</li>
   <li>To alert you to severe weather conditions in your area.</li>
   <li>To display advertising that helps keep the app free.</li>
 </ul>
@@ -83,7 +84,7 @@
 <p>WeatherNow is not directed at children under 13, and we do not knowingly collect personal information from children under 13.</p>
 
 <h2>Data Security</h2>
-<p>Location and preference data used by the app stays on your device or is sent directly to the third parties described above over encrypted connections. We do not maintain a server that stores your personal data.</p>
+<p>Location and preference data used by the app stays on your device, or passes through our proxy server (which does not store it) to the third parties described above, all over encrypted connections. We do not maintain a server that stores your personal data.</p>
 
 <h2>Changes to This Policy</h2>
 <p>We may update this Privacy Policy from time to time. Changes will be posted on this page with an updated "Last updated" date.</p>
